@@ -177,7 +177,7 @@ void loop() {
 
   float power = voltage * current;
 
-  // ---- ENERGY ----
+  // ---- ENERGY (Assuming 10 second loop) ----
   totalEnergy += (power * (10.0 / 3600.0));
 
   // ---- SERIAL FORMAT (MATCH YOUR OUTPUT) ----
@@ -220,5 +220,5 @@ void loop() {
 
   Serial.println("------------------------");
 
-  delay(10000);
+  delay(10000); // 10 seconds delay between readings matches the energy math
 }

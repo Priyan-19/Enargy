@@ -1,105 +1,82 @@
-# ⚡ Enargy Setup Guide
+# ⚡ Enargy Setup Instructions
 
-A complete Blockchain-Based Smart Energy Meter System with real-time monitoring and automated billing.
+A concise guide for setting up and running the Enargy Smart Energy Meter project.
 
 ---
 
 ## 🏗️ 1. Prerequisites
-
-Before starting, ensure you have:
 - [Node.js](https://nodejs.org/) (v16+)
-- [PostgreSQL](https://www.postgresql.org/) (Running on port 5432)
+- [PostgreSQL](https://www.postgresql.org/) (Running on 5432)
 - [NPM](https://www.npmjs.com/)
 
 ---
 
-## 🗄️ 2. Database Setup
-
-1. Open your PostgreSQL tool (pgAdmin, psql, etc.).
-2. Create a new database named `enargy`.
-3. Run the SQL script from `backend/db/schema.sql`:
-   ```sql
+## 🗄️ 2. Database Creation
+1. Create a database named `enargy` in PostgreSQL.
+2. Initialize tables:
+   ```bash
    psql -U postgres -d enargy -f backend/db/schema.sql
    ```
-4. Verify the `energy_readings` and `payments` tables exist.
+3. Confirm tables `energy_readings` and `payments` exist.
 
 ---
 
-## 🔗 3. Blockchain Deployment
-
-This project uses a local Hardhat network for testing the Smart Contract.
-
-1. Open a new terminal in the `blockchain/` folder:
+## 🔗 3. Smart Contract Deployment (Blockchain)
+1. Install and start the local node:
    ```bash
    cd blockchain
    npm install
-   ```
-2. Start the Hardhat local node:
-   ```bash
    npx hardhat node
    ```
-3. Open a **second** terminal and deploy the contract:
+2. **In a new terminal**, deploy the contract:
    ```bash
+   cd blockchain
    npx hardhat run scripts/deploy.js --network localhost
    ```
-4. **IMPORTANT**: Copy the printed "Contract Address" (e.g., `0x5Fb...`).
+3. **Important**: Copy the "Contract Address" from the terminal output (e.g., `0xe7f...`).
 
 ---
 
-## ⚙️ 4. Backend Configuration
-
-1. Go into the `backend/` folder:
+## ⚙️ 4. API & Backend Setup
+1. Configure `backend/.env`:
+   - Set `DB_PASSWORD` to your PostgreSQL password.
+   - Set `CONTRACT_ADDRESS` to the address from step 3.
+2. Install and launch the server:
    ```bash
    cd backend
    npm install
+   npm run dev
    ```
-2. Open the `.env` file (or copy from `.env.example`).
-3. Paste the **Contract Address** from step 3 into `CONTRACT_ADDRESS`.
-4. (Optional) Insert your PostgreSQL password in `DB_PASSWORD`.
 
 ---
 
 ## 🚀 5. Running the System
+You need to have **three terminals** running:
 
-To see everything in action, you need three terminals:
+-   **Terminal 1**: `npx hardhat node` (Local Blockchain)
+-   **Terminal 2**: `npm run dev` (Backend API)
+-   **Terminal 3**: `npm run dev` (Frontend Dashboard)
 
-### Terminal 1: Hardhat Node
-Already running from Step 3. Keep it open.
-
-### Terminal 2: Backend API
-```bash
-cd backend
-npm run dev
-```
-
-### Terminal 3: Frontend Dashboard
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+**Dashboards**:
+-   Access at `http://localhost:5173` or `http://localhost:3000`.
 
 ---
 
-## 🧪 6. Simulating ESP32 Data
-
-If you don't have the real ESP32 running yet, use our built-in simulator:
-
+## 🧪 6. Simulating Data
+No ESP32? Use the data simulator:
 ```bash
 cd backend
 node scripts/test_esp32.js
 ```
-
-This will start sending data every 10 seconds to the backend, which will then store it in PostgreSQL and send it to the blockchain. You will see the charts in the dashboard update automatically!
+This script pushes data every 10 seconds to the backend, which will then store it in PostgreSQL and send it to the blockchain automatically.
 
 ---
 
-## 💳 7. Payment Integration (Optional)
+## 🔌 7. ESP32 Hardware
+1. Update `energy_meter.ino` with your actual IPv4 address (e.g., `serverName = "http://10.193.174.82..."`).
+2. Current sensor pin (A0) and voltage sensor pin (A1).
+3. Readings are sent every **2 minutes**.
 
-To test payments, get your **Razorpay Test Keys** from the [Razorpay Dashboard](https://dashboard.razorpay.com/) and paste them into `backend/.env`.
+---
 
-- `RAZORPAY_KEY_ID`: `rzp_test_...`
-- `RAZORPAY_KEY_SECRET`: `your_secret`
-
-When paying, use the [Razorpay Test Cards](https://razorpay.com/docs/payments/payments/test-mode/) (e.g., card number 4111 1111 1111 1111).
+**© 2026 Enargy Project.**

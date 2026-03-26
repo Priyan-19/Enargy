@@ -1,25 +1,32 @@
 # ⚡ Complete Setup Guide: Blockchain Energy Meter System
 
-A guide to setting up and running the end-to-end Smart Energy Meter project.
+A comprehensive guide for setting up and running the end-to-end **Enargy** Smart Energy Meter project.
 
 ---
 
 ## 🗄️ 1. PostgreSQL Database
+
+The project uses PostgreSQL (v12+) for rapid data access and historical persistence.
+
 1.  **Installation**: Ensure PostgreSQL is running on port `5432`.
 2.  **Database Creation**:
-    -   Log in to psql: `psql -U postgres`
-    -   Create DB: `CREATE DATABASE enargy;`
-3.  **Schema Execution**: Run the schema script:
+    -   Run: `psql -U postgres`
+    -   Execute: `CREATE DATABASE enargy;`
+3.  **Schema Execution**: Initialize the tables using the provided script:
     -   `psql -U postgres -d enargy -f backend/db/schema.sql`
-4.  **Confirm**: Verify tables `energy_readings` and `payments` are created.
+4.  **Confirm**: Tables `energy_readings` and `payments` should be created.
 
 ---
 
-## 🔗 2. Blockchain (Hardhat)
+## 🔗 2. Blockchain (Hardhat + Ethers v6)
+
+The project handles immutable ledger accounting via a Solidity smart contract.
+
 1.  **Install Dependencies**:
     ```bash
     cd blockchain
     npm install
+    # (Note: This project uses Ethers v6)
     ```
 2.  **Start Local Node**:
     ```bash
@@ -31,30 +38,37 @@ A guide to setting up and running the end-to-end Smart Energy Meter project.
     cd blockchain
     npx hardhat run scripts/deploy.js --network localhost
     ```
-4.  **Important**: Copy the **Contract Address** printed (e.g., `0x5Fb...`).
+4.  **Important**: Copy the **Contract Address** printed (e.g., `0xe7f...`).
 
 ---
 
 ## ⚙️ 3. Node.js Backend
+
+The backend acts as the bridge between IoT (ESP32) and Blockchain.
+
 1.  **Install Dependencies**:
     ```bash
     cd backend
     npm install
     ```
 2.  **Configure Environment**:
-    -   Rename `.env.example` to `.env`.
+    -   Open `.env`.
     -   Set `DB_PASSWORD` to your PostgreSQL password.
     -   Set `CONTRACT_ADDRESS` to the address from Step 2.
-    -   Verify `PORT=3000` and `API_KEY=EB_SECURE_KEY_123`.
+    -   Verify `API_KEY=EB_SECURE_KEY_123` (this must match the ESP32 code).
 3.  **Start Server**:
     ```bash
     npm run dev
     ```
     *(API is now live at http://localhost:3000)*
+4.  **Response Format**: Note: The `POST /api/energy` now only returns the `blockchain_tx_hash` for IoT efficiency.
 
 ---
 
 ## 💻 4. Frontend Dashboard
+
+The React-based dashboard provides real-time monitoring and billing.
+
 1.  **Install Dependencies**:
     ```bash
     cd frontend
@@ -64,43 +78,43 @@ A guide to setting up and running the end-to-end Smart Energy Meter project.
     ```bash
     npm run dev
     ```
-3.  **Access**: Open [http://localhost:3000](http://localhost:3000) in your browser.
-    *(Note: Both frontend and backend use port 3000 by default; Vite serves the React app and proxies `/api` requests automatically)*.
+3.  **Access**: Open [http://localhost:5173](http://localhost:5173) (Vite default) or [http://localhost:3000](http://localhost:3000).
 
 ---
 
 ## 🔌 5. ESP32 Firmware
-1.  **Hardware Wiring**:
-    -   Current Sensor (GPIO 34)
-    -   Voltage Sensor (GPIO 35)
-    -   LCD 16x2 (SDA/SCL pins for ESP32)
-2.  **Arduino Setup**:
-    -   Install `ArduinoJson` and `LiquidCrystal_I2C` libraries.
-    -   Update `ssid` and `password` in `esp32_firmware/energy_meter/energy_meter.ino`.
-    -   Update `serverName` if your PC's IP is not `192.168.1.100`.
-3.  **Test Without Hardware**: Flip `testMode = true;` in the firmware to send random data for testing.
+
+Firmware for the ESP32-based hardware (Arduino C++).
+
+1.  **Arduino Setup**:
+    -   Install `ArduinoJson`, `HTTPClient`, and `LiquidCrystal_I2C`.
+    -   Update `ssid` and `password` in `energy_meter.ino`.
+    -   Update `serverName` to reflect your PC's actual IPv4 address.
+2.  **Delay**: Default delay is set to **2 minutes** (`120000ms`) between readings.
+3.  **Test Mode**: Flip `testMode = true;` to simulate sensor values without hardware.
 
 ---
 
 ## 🧪 6. Simulating Data (No ESP32 needed)
+
 If you're only testing the software flow:
-1.  Ensure Backend is running.
-2.  Open a terminal in `backend/`:
-    ```bash
-    node scripts/test_esp32.js
-    ```
-    This script will push data to the API every 10 seconds.
+Run the internal backend simulator:
+```bash
+cd backend
+node scripts/test_esp32.js
+```
+This script pushes data to the API as if an ESP32 was connected.
 
 ---
 
 ## 💳 7. Optional: Razorpay Test Mode
-1.  Get test keys from the Razorpay Dashboard.
-2.  Put `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` in `backend/.env`.
-3.  Use card `4111 1111 1111 1111` for successful test payments.
+
+1.  Put `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` in `backend/.env`.
+2.  Use card `4111 1111 1111 1111` for successful test payments.
 
 ---
 
 ### 🛑 Troubleshooting
--   **DB Connection Error**: Ensure the database name matches `enargy` and your credentials in `.env` are correct.
--   **Blockchain Error**: Ensure the Hardhat node is running and the contract address in `.env` is exact.
--   **Cors Issues**: The project uses a proxy in `vite.config.js`. Ensure the backend server starts on the port specified in the config.
+-   **Ethers Migration**: Ensure you use `hre.ethers.formatEther` (v6 syntax) instead of Ethers v5 utils.
+-   **No Null Hash**: The backend will return a 500 error if the blockchain fails, ensuring `blockchain_tx_hash` is never null in a 201 response.
+-   **Port Conflict**: Ensure no other service is using port 3000 or 5432.

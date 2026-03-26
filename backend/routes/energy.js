@@ -24,6 +24,10 @@ router.post('/energy', apiKeyAuth, validateReading, async (req, res) => {
   const { meter_id, timestamp, voltage, current, power, energy_kwh, hash } = req.body;
 
   try {
+    // If ESP32 fails to grab time, it sends 'N/A', which breaks PostgreSQL's timestamp type
+    const validTimestamp = timestamp === 'N/A' ? new Date().toISOString() : timestamp;
+    req.body.timestamp = validTimestamp; // update body for blockchain
+
     // ── STEP 1: Insert into PostgreSQL ──────────────────────
     const insertQuery = `
       INSERT INTO energy_readings
@@ -32,7 +36,7 @@ router.post('/energy', apiKeyAuth, validateReading, async (req, res) => {
       RETURNING id
     `;
     const dbResult = await pool.query(insertQuery, [
-      meter_id, timestamp, voltage, current, power, energy_kwh, hash
+      meter_id, validTimestamp, voltage, current, power, energy_kwh, hash
     ]);
     const newId = dbResult.rows[0].id;
     console.log(`📥 Reading saved to DB with id=${newId}`);

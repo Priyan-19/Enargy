@@ -52,6 +52,9 @@ async function storeReadingOnChain(data) {
 
     console.log('📡 Sending reading to blockchain...');
 
+    // Fetch latest nonce directly from network to prevent mismatch if hardhat resets
+    const nonce = await provider.getTransactionCount(wallet.address, 'latest');
+
     // Call the smart contract function
     const tx = await contract.storeReading(
       data.meter_id,
@@ -59,8 +62,9 @@ async function storeReadingOnChain(data) {
       currentScaled,
       powerScaled,
       energyScaled,
-      data.timestamp,
-      data.hash
+      data.timestamp || new Date().toISOString(),
+      data.hash,
+      { nonce }
     );
 
     // Wait for the transaction to be mined (1 confirmation)
