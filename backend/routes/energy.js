@@ -1,0 +1,214 @@
+// ============================================================
+// routes/energy.js – Energy Reading Routes
+//
+// POST /api/energy         → Receive reading from ESP32
+// GET  /api/readings       → Get all readings (with optional limit)
+// GET  /api/meter/:id      → Get readings for a specific meter
+// GET  /api/bill/:meterId  → Calculate electricity bill
+// GET  /api/blockchain     → Fetch all readings from blockchain
+// ============================================================
+
+const express       = require('express');
+const router        = express.Router();
+const pool          = require('../db/pool');
+const apiKeyAuth    = require('../middleware/auth');
+const validateReading = require('../middleware/validateReading');
+const { storeReadingOnChain, getAllReadingsFromChain } = require('../blockchain/client');
+
+// ============================================================
+// POST /api/energy
+// Receives JSON from ESP32, stores in DB, then on blockchain.
+// Headers required: x-api-key
+// ============================================================
+router.post('/energy', apiKeyAuth, validateReading, async (req, res) => {
+  const { meter_id, timestamp, voltage, current, power, energy_kwh, hash } = req.body;
+
+  try {
+    // ── STEP 1: Insert into PostgreSQL ──────────────────────
+    const insertQuery = `
+      INSERT INTO energy_readings
+        (meter_id, timestamp, voltage, current, power, energy_kwh, hash)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id
+    `;
+    const dbResult = await pool.query(insertQuery, [
+      meter_id, timestamp, voltage, current, power, energy_kwh, hash
+    ]);
+    const newId = dbResult.rows[0].id;
+    console.log(`📥 Reading saved to DB with id=${newId}`);
+
+    // ── STEP 2: Send to Blockchain ──────────────────────────
+    const txHash = await storeReadingOnChain(req.body);
+
+    // ── STEP 3: Update row with blockchain tx hash ────────
+    await pool.query(
+      'UPDATE energy_readings SET blockchain_tx_hash = $1 WHERE id = $2',
+      [txHash, newId]
+    );
+
+    console.log(`🔗 Blockchain TX hash stored: ${txHash}`);
+
+    // ── STEP 4: Respond to ESP32 ────────────────────────────
+    if (txHash === null) {
+      throw new Error("Blockchain transaction failed to produce a hash.");
+    }
+
+    res.status(201).json({
+      blockchain_tx_hash: txHash
+    });
+
+  } catch (err) {
+    console.error('❌ POST /api/energy error:', err.message);
+    res.status(500).json({ error: 'Internal server error.', detail: err.message });
+  }
+});
+
+// ============================================================
+// GET /api/readings
+// Returns all readings, newest first. Supports ?limit=N
+// ============================================================
+router.get('/readings', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100; // Default last 100 readings
+
+    const result = await pool.query(
+      `SELECT * FROM energy_readings ORDER BY timestamp DESC LIMIT $1`,
+      [limit]
+    );
+
+    res.json({
+      success: true,
+      count: result.rows.length,
+      readings: result.rows
+    });
+
+  } catch (err) {
+    console.error('❌ GET /api/readings error:', err.message);
+    res.status(500).json({ error: 'Database error.', detail: err.message });
+  }
+});
+
+// ============================================================
+// GET /api/meter/:id
+// Returns all readings for a specific meter ID
+// ============================================================
+router.get('/meter/:id', async (req, res) => {
+  try {
+    const meterId = req.params.id;
+
+    const result = await pool.query(
+      `SELECT * FROM energy_readings WHERE meter_id = $1 ORDER BY timestamp DESC`,
+      [meterId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: `No readings found for meter ${meterId}` });
+    }
+
+    res.json({
+      success: true,
+      meter_id: meterId,
+      count: result.rows.length,
+      readings: result.rows
+    });
+
+  } catch (err) {
+    console.error('❌ GET /api/meter/:id error:', err.message);
+    res.status(500).json({ error: 'Database error.', detail: err.message });
+  }
+});
+
+// ============================================================
+// GET /api/bill/:meterId
+// Calculates the electricity bill based on total kWh consumed.
+//
+// Slab system (Indian domestic tariff):
+//   0–100 kWh      → ₹1.5 / kWh
+//   101–300 kWh    → ₹3.0 / kWh
+//   301–500 kWh    → ₹5.0 / kWh
+//   Above 500 kWh  → ₹7.0 / kWh
+// ============================================================
+router.get('/bill/:meterId', async (req, res) => {
+  try {
+    const meterId = req.params.meterId;
+
+    // Get the max (latest cumulative) energy_kwh for this meter
+    const result = await pool.query(
+      `SELECT MAX(energy_kwh) AS total_kwh FROM energy_readings WHERE meter_id = $1`,
+      [meterId]
+    );
+
+    const totalKwh = parseFloat(result.rows[0].total_kwh) || 0;
+
+    // ── Slab Billing Calculation ────────────────────────────
+    let bill = 0;
+    let breakdown = [];
+
+    if (totalKwh <= 100) {
+      bill = totalKwh * 1.5;
+      breakdown = [{ slab: '0–100 kWh', units: totalKwh, rate: 1.5, cost: bill }];
+    } else if (totalKwh <= 300) {
+      const slab1Cost = 100 * 1.5;
+      const slab2Units = totalKwh - 100;
+      const slab2Cost  = slab2Units * 3.0;
+      bill = slab1Cost + slab2Cost;
+      breakdown = [
+        { slab: '0–100 kWh',   units: 100,        rate: 1.5, cost: slab1Cost },
+        { slab: '101–300 kWh', units: slab2Units,  rate: 3.0, cost: slab2Cost },
+      ];
+    } else if (totalKwh <= 500) {
+      const slab1Cost  = 100 * 1.5;
+      const slab2Cost  = 200 * 3.0;
+      const slab3Units = totalKwh - 300;
+      const slab3Cost  = slab3Units * 5.0;
+      bill = slab1Cost + slab2Cost + slab3Cost;
+      breakdown = [
+        { slab: '0–100 kWh',   units: 100,        rate: 1.5, cost: slab1Cost },
+        { slab: '101–300 kWh', units: 200,         rate: 3.0, cost: slab2Cost },
+        { slab: '301–500 kWh', units: slab3Units,  rate: 5.0, cost: slab3Cost },
+      ];
+    } else {
+      const slab1Cost  = 100 * 1.5;
+      const slab2Cost  = 200 * 3.0;
+      const slab3Cost  = 200 * 5.0;
+      const slab4Units = totalKwh - 500;
+      const slab4Cost  = slab4Units * 7.0;
+      bill = slab1Cost + slab2Cost + slab3Cost + slab4Cost;
+      breakdown = [
+        { slab: '0–100 kWh',   units: 100,        rate: 1.5, cost: slab1Cost },
+        { slab: '101–300 kWh', units: 200,         rate: 3.0, cost: slab2Cost },
+        { slab: '301–500 kWh', units: 200,         rate: 5.0, cost: slab3Cost },
+        { slab: 'Above 500 kWh', units: slab4Units, rate: 7.0, cost: slab4Cost },
+      ];
+    }
+
+    res.json({
+      success:    true,
+      meter_id:   meterId,
+      total_kwh:  parseFloat(totalKwh.toFixed(3)),
+      total_bill: parseFloat(bill.toFixed(2)),
+      currency:   'INR',
+      breakdown,
+    });
+
+  } catch (err) {
+    console.error('❌ GET /api/bill/:meterId error:', err.message);
+    res.status(500).json({ error: 'Database error.', detail: err.message });
+  }
+});
+
+// ============================================================
+// GET /api/blockchain
+// Reads all readings directly from the blockchain smart contract
+// ============================================================
+router.get('/blockchain', async (req, res) => {
+  try {
+    const readings = await getAllReadingsFromChain();
+    res.json({ success: true, count: readings.length, readings });
+  } catch (err) {
+    console.error('❌ GET /api/blockchain error:', err.message);
+    res.status(500).json({ error: 'Blockchain read error.', detail: err.message });
+  }
+});
+
+module.exports = router;
