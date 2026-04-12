@@ -90,3 +90,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+// Force nodemon restart to inject 0x9... contract string into process.env

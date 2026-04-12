@@ -28,37 +28,34 @@ router.post('/energy', apiKeyAuth, validateReading, async (req, res) => {
     const validTimestamp = timestamp === 'N/A' ? new Date().toISOString() : timestamp;
     req.body.timestamp = validTimestamp; // update body for blockchain
 
-    // ── STEP 1: Insert into PostgreSQL ──────────────────────
+    // ── STEP 1: Process & Store Data on Blockchain FIRST ──────
+    console.log(`📡 Sending to blockchain FIRST (Hash + Tx)...`);
+    const txHash = await storeReadingOnChain(req.body);
+
+    if (!txHash) {
+      throw new Error("Blockchain transaction failed to produce a hash.");
+    }
+    console.log(`🔗 Blockchain Data Stored! TX: ${txHash}`);
+
+    // ── STEP 2: Store Ref & Indexed Data in PostgreSQL ────────
     const insertQuery = `
       INSERT INTO energy_readings
-        (meter_id, timestamp, voltage, current, power, energy_kwh, hash)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+        (meter_id, timestamp, voltage, current, power, energy_kwh, hash, blockchain_tx_hash)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id
     `;
     const dbResult = await pool.query(insertQuery, [
-      meter_id, validTimestamp, voltage, current, power, energy_kwh, hash
+      meter_id, validTimestamp, voltage, current, power, energy_kwh, hash, txHash
     ]);
     const newId = dbResult.rows[0].id;
-    console.log(`📥 Reading saved to DB with id=${newId}`);
+    console.log(`📥 Reading mapped to PostgreSQL DB with id=${newId}`);
 
-    // ── STEP 2: Send to Blockchain ──────────────────────────
-    const txHash = await storeReadingOnChain(req.body);
-
-    // ── STEP 3: Update row with blockchain tx hash ────────
-    await pool.query(
-      'UPDATE energy_readings SET blockchain_tx_hash = $1 WHERE id = $2',
-      [txHash, newId]
-    );
-
-    console.log(`🔗 Blockchain TX hash stored: ${txHash}`);
-
-    // ── STEP 4: Respond to ESP32 ────────────────────────────
-    if (txHash === null) {
-      throw new Error("Blockchain transaction failed to produce a hash.");
-    }
-
+    // ── STEP 3: Respond to ESP32 ────────────────────────────
     res.status(201).json({
-      blockchain_tx_hash: txHash
+      success: true,
+      message: "Data securely stored on Blockchain and Indexed in DB.",
+      blockchain_tx_hash: txHash,
+      db_id: newId
     });
 
   } catch (err) {
@@ -80,10 +77,23 @@ router.get('/readings', async (req, res) => {
       [limit]
     );
 
+    let readings = result.rows;
+
+    // ── PostgreSQL -> Blockchain (Verify Retrieval) ──
+    try {
+      const chainData = await getAllReadingsFromChain();
+      readings = readings.map(dbRow => {
+        const verified = chainData.some(c => c.hash === dbRow.hash);
+        return { ...dbRow, verified_by_blockchain: verified };
+      });
+    } catch (err) {
+      console.warn('Blockchain verification skipped/failed:', err.message);
+    }
+
     res.json({
       success: true,
-      count: result.rows.length,
-      readings: result.rows
+      count: readings.length,
+      readings: readings
     });
 
   } catch (err) {
@@ -109,11 +119,24 @@ router.get('/meter/:id', async (req, res) => {
       return res.status(404).json({ error: `No readings found for meter ${meterId}` });
     }
 
+    let readings = result.rows;
+
+    // ── PostgreSQL -> Blockchain (Verify Retrieval) ──
+    try {
+      const chainData = await getAllReadingsFromChain();
+      readings = readings.map(dbRow => {
+        const verified = chainData.some(c => c.hash === dbRow.hash);
+        return { ...dbRow, verified_by_blockchain: verified };
+      });
+    } catch (err) {
+      console.warn('Blockchain verification skipped/failed:', err.message);
+    }
+
     res.json({
       success: true,
       meter_id: meterId,
-      count: result.rows.length,
-      readings: result.rows
+      count: readings.length,
+      readings: readings
     });
 
   } catch (err) {

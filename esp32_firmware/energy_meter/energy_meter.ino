@@ -1,23 +1,24 @@
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-#include <time.h>
 #include "mbedtls/sha256.h"
+#include <ArduinoJson.h>
+#include <HTTPClient.h>
+#include <LiquidCrystal_I2C.h>
+#include <WiFi.h>
+#include <Wire.h>
+#include <time.h>
+
 
 // ---------------- WIFI ----------------
-const char* ssid = "1";
-const char* password = "11111111";
+const char *ssid = "1";
+const char *password = "11111111";
 
 // ---------------- SERVER ----------------
-const char* serverName = "http://172.16.205.82:3000/api/energy";
+const char *serverName = "http://172.16.205.82:3000/api/energy";
 
 // ---------------- AUTH ----------------
-const char* apiKey = "EB_SECURE_KEY_123";
+const char *apiKey = "EB_SECURE_KEY_123";
 
 // ---------------- TIME ----------------
-const char* ntpServer = "pool.ntp.org";
+const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 19800;
 const int daylightOffset_sec = 0;
 
@@ -64,7 +65,8 @@ void connectWiFi() {
 // ---------------- TIME ----------------
 String getTimestamp() {
   struct tm timeinfo;
-  if (!getLocalTime(&timeinfo)) return "N/A";
+  if (!getLocalTime(&timeinfo))
+    return "N/A";
 
   char buffer[30];
   strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo);
@@ -74,7 +76,7 @@ String getTimestamp() {
 // ---------------- HASH ----------------
 String generateHash(String data) {
   byte hash[32];
-  mbedtls_sha256((const unsigned char*)data.c_str(), data.length(), hash, 0);
+  mbedtls_sha256((const unsigned char *)data.c_str(), data.length(), hash, 0);
 
   String result = "";
   for (int i = 0; i < 32; i++) {
@@ -92,7 +94,7 @@ float readVoltage() {
     sum += analogRead(VOLTAGE_PIN);
     delayMicroseconds(200);
   }
-  return (sum / 50.0 / 4095.0) * 3.3;
+  return (sum / 50.0 / 4095.0) * 3.3 * 100.0; // Scaled for demo
 }
 
 float readCurrent() {
@@ -102,7 +104,8 @@ float readCurrent() {
     delayMicroseconds(200);
   }
   float avg = sum / 50.0;
-  return ((avg / 4095.0) * 3.3 - 2.5) / 0.185;
+  float current = ((avg / 4095.0) * 3.3 - 2.5) / 0.185;
+  return fabs(current);
 }
 
 // ---------------- LCD ----------------
@@ -120,6 +123,10 @@ void displayData(float v, float i, float p) {
   lcd.setCursor(0, 1);
   lcd.print("P:");
   lcd.print(p, 1);
+
+  lcd.setCursor(9, 1);
+  lcd.print("M:");
+  lcd.print(meterID);
 }
 
 // ---------------- SEND ----------------
@@ -195,7 +202,8 @@ void loop() {
   String timestamp = getTimestamp();
 
   // ---- HASH ----
-  String raw = meterID + timestamp + String(voltage) + String(current) + String(power);
+  String raw =
+      meterID + timestamp + String(voltage) + String(current) + String(power);
   String hash = generateHash(raw);
 
   // ---- JSON ----
@@ -220,5 +228,5 @@ void loop() {
 
   Serial.println("------------------------");
 
-  delay(120000); // 2 mins delay between readings matches the energy math
+  delay(60000); // 1 mins delay between readings matches the energy math
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Activity, Wallet, MessageSquare, Search, RefreshCw, Smartphone } from 'lucide-react';
+import { Users, Activity, Wallet, MessageSquare, Search, RefreshCw, Smartphone, Shield } from 'lucide-react';
 import { getLatestReadings } from '../../services/api';
 
 const AdminKPICard = ({ title, value, icon, variant = 'primary' }) => (
@@ -111,7 +111,12 @@ export default function AdminDashboard() {
                   <td>{parseFloat(r.power || 0).toFixed(1)}</td>
                   <td>{parseFloat(r.energy_kwh || 0).toFixed(3)}</td>
                   <td>{new Date(r.timestamp).toLocaleTimeString()}</td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td style={{ textAlign: 'right', display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    {r.verified_by_blockchain && (
+                      <span className="badge" style={{ background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px' }}>
+                        <Shield size={12} /> Verified
+                      </span>
+                    )}
                     <span className="badge badge-success">Online</span>
                   </td>
                 </tr>

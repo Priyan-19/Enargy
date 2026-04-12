@@ -113,11 +113,11 @@ export default function ConsumerDashboard({ user }) {
           variant="success"
         />
         <KPICard 
-          title="Meter Status" 
-          value="Active" 
-          label="Optimal Health" 
-          icon={<AlertTriangle size={24} />} 
-          variant="warning"
+          title="Data Integrity" 
+          value={data.history[0]?.verified_by_blockchain ? "Verified" : "Pending..."} 
+          label="Blockchain Anchored" 
+          icon={<Shield size={24} />} 
+          variant={data.history[0]?.verified_by_blockchain ? "success" : "warning"}
         />
       </div>
 

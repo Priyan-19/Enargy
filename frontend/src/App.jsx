@@ -8,6 +8,8 @@ import ConsumerDashboard from './pages/Consumer/Dashboard';
 import BillingModule from './pages/Consumer/Billing';
 import ComplaintModule from './pages/Consumer/Complaints';
 import AdminDashboard from './pages/Admin/Dashboard';
+import AdminBilling from './pages/Admin/Billing';
+import AdminComplaints from './pages/Admin/Complaints';
 import BlockchainMonitoring from './pages/Admin/Blockchain';
 
 const Sidebar = ({ role, user, logout }) => {
@@ -52,7 +54,7 @@ const Header = ({ title, user }) => {
   const [showProfile, setShowProfile] = useState(false);
 
   return (
-    <header className="header" style={{ position: 'relative' }}>
+    <header className="header">
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         <button className="btn" style={{ padding: '8px', background: '#f8f9fa', display: 'none' }}>
           <Menu size={20} />
@@ -165,6 +167,9 @@ export default function App() {
           ) : (
             <>
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/monitoring" element={<AdminDashboard />} />
+              <Route path="/billing" element={<AdminBilling />} />
+              <Route path="/complaints" element={<AdminComplaints />} />
               <Route path="/admin/blockchain" element={<BlockchainMonitoring />} />
               <Route path="*" element={<Navigate to="/admin" />} />
             </>

@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Database, ExternalLink, Activity } from 'lucide-react';
+import { Shield, Database, ExternalLink, Activity, Users, Wallet, MessageSquare } from 'lucide-react';
 import { getBlockchainData } from '../../services/api';
+
+const AdminKPICard = ({ title, value, icon, variant = 'primary' }) => (
+  <div className={`card kpi-card kpi-${variant} animate-up`}>
+    <div className="kpi-icon">{icon}</div>
+    <div>
+      <p className="kpi-label">{title}</p>
+      <h2 className="kpi-value">{value}</h2>
+      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Updated just now</p>
+    </div>
+  </div>
+);
 
 export default function BlockchainMonitoring() {
   const [data, setData] = useState([]);
@@ -24,6 +35,32 @@ export default function BlockchainMonitoring() {
 
   return (
     <div className="animate-up">
+      <div className="kpi-grid">
+        <AdminKPICard 
+          title="Total Consumers" 
+          value="1,284" 
+          icon={<Users size={24} />} 
+        />
+        <AdminKPICard 
+          title="Total Energy Usage" 
+          value="48.2 MWh" 
+          icon={<Activity size={24} />} 
+          variant="accent"
+        />
+        <AdminKPICard 
+          title="Total Revenue" 
+          value="₹14.2 L" 
+          icon={<Wallet size={24} />} 
+          variant="success"
+        />
+        <AdminKPICard 
+          title="Active Complaints" 
+          value="12" 
+          icon={<MessageSquare size={24} />} 
+          variant="warning"
+        />
+      </div>
+
       <div className="card" style={{ marginBottom: '30px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
