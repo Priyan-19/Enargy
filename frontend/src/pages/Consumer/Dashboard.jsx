@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Zap, Shield, TrendingUp, Clock, AlertTriangle, Receipt } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { getMeterReadings, getBilling } from '../../services/api';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const KPICard = ({ title, value, label, icon, variant = 'primary', action }) => (
   <div className={`card kpi-card kpi-${variant} animate-up`}>
@@ -45,11 +45,11 @@ export default function ConsumerDashboard({ user }) {
       const history = readingsRes.data.readings.slice(0, 10).reverse();
 
       setData({
-        voltage: latest.voltage || 0,
-        current: latest.current || 0,
-        power: latest.power || 0,
-        energy_kwh: latest.energy_kwh || 0,
-        bill: billRes.data.total_bill || 0,
+        voltage: parseFloat(latest.voltage || 0),
+        current: parseFloat(latest.current || 0),
+        power: parseFloat(latest.power || 0),
+        energy_kwh: parseFloat(latest.energy_kwh || 0),
+        bill: parseFloat(billRes.data.total_bill || 0),
         history
       });
       setLoading(false);

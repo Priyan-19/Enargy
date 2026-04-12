@@ -48,25 +48,68 @@ const Sidebar = ({ role, user, logout }) => {
   );
 };
 
-const Header = ({ title, user }) => (
-  <header className="header">
-    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-      <button className="btn" style={{ padding: '8px', background: '#f8f9fa', display: 'none' }}>
-        <Menu size={20} />
-      </button>
-      <h3 style={{ color: 'var(--primary)', letterSpacing: '-0.5px' }}>{title}</h3>
-    </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{user?.name || 'Authorized'}</span>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user?.meterId || 'EB-ADMIN'}</span>
+const Header = ({ title, user }) => {
+  const [showProfile, setShowProfile] = useState(false);
+
+  return (
+    <header className="header" style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <button className="btn" style={{ padding: '8px', background: '#f8f9fa', display: 'none' }}>
+          <Menu size={20} />
+        </button>
+        <h3 style={{ color: 'var(--primary)', letterSpacing: '-0.5px' }}>{title}</h3>
       </div>
-      <div style={{ width: '40px', height: '40px', background: '#F1F2F6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', border: '2px solid var(--primary)' }}>
-        <img src={`https://ui-avatars.com/api/?name=${user?.name || 'A'}&background=0A3D62&color=fff`} alt="user" style={{ borderRadius: '50%' }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div 
+          onClick={() => setShowProfile(!showProfile)} 
+          style={{ display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer', padding: '5px', borderRadius: '8px', transition: 'background 0.2s' }}
+          onMouseOver={(e) => e.currentTarget.style.background = '#f1f2f6'}
+          onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+        >
+          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{user?.name || 'Authorized'}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user?.meterId || 'EB-ADMIN'}</span>
+          </div>
+          <div style={{ width: '40px', height: '40px', background: '#F1F2F6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--primary)' }}>
+            <img src={`https://ui-avatars.com/api/?name=${user?.name || 'A'}&background=0A3D62&color=fff`} alt="user" style={{ borderRadius: '50%' }} />
+          </div>
+        </div>
+
+        {showProfile && (
+          <div style={{
+            position: 'absolute',
+            top: '60px',
+            right: '20px',
+            background: 'white',
+            border: '1px solid #ddd',
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+            padding: '20px',
+            width: '260px',
+            zIndex: 100,
+            animation: 'fadeIn 0.2s ease-out'
+          }}>
+            <h4 style={{ margin: '0 0 15px 0', borderBottom: '1px solid #eee', paddingBottom: '10px', color: 'var(--primary)' }}>Profile Details</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Name:</span>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user?.name || 'N/A'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Role:</span>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem', textTransform: 'capitalize' }}>{user?.role || 'Admin'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>ID:</span>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user?.meterId || 'EB-ADMIN'}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  </header>
-);
+    </header>
+  );
+};
 
 const AppLayout = ({ children, role, user, logout }) => {
   const location = useLocation();

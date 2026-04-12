@@ -106,10 +106,10 @@ export default function AdminDashboard() {
               {filteredReadings.length > 0 ? filteredReadings.map((r, i) => (
                 <tr key={i}>
                   <td><span style={{ fontWeight: 700 }}>{r.meter_id}</span></td>
-                  <td>{r.voltage.toFixed(1)}</td>
-                  <td>{r.current.toFixed(2)}</td>
-                  <td>{r.power.toFixed(1)}</td>
-                  <td>{r.energy_kwh.toFixed(3)}</td>
+                  <td>{parseFloat(r.voltage || 0).toFixed(1)}</td>
+                  <td>{parseFloat(r.current || 0).toFixed(2)}</td>
+                  <td>{parseFloat(r.power || 0).toFixed(1)}</td>
+                  <td>{parseFloat(r.energy_kwh || 0).toFixed(3)}</td>
                   <td>{new Date(r.timestamp).toLocaleTimeString()}</td>
                   <td style={{ textAlign: 'right' }}>
                     <span className="badge badge-success">Online</span>

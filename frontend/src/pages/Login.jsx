@@ -21,7 +21,7 @@ export default function LoginPage({ onLogin }) {
     } else {
       // For consumer: Password must be TNEB@ + MeterID
       if (formData.password === `TNEB@${formData.username}`) {
-        onLogin('consumer', { name: 'John Doe', meterId: formData.username, role: 'consumer' });
+        onLogin('consumer', { name: 'Priyan', meterId: formData.username, role: 'consumer' });
       } else {
         alert('Incorrect format. Password must be TNEB@{{meter_id}}');
       }

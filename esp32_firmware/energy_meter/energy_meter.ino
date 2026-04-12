@@ -11,7 +11,7 @@ const char* ssid = "1";
 const char* password = "11111111";
 
 // ---------------- SERVER ----------------
-const char* serverName = "http://10.193.174.82:3000/api/energy";
+const char* serverName = "http://172.16.205.82:3000/api/energy";
 
 // ---------------- AUTH ----------------
 const char* apiKey = "EB_SECURE_KEY_123";
@@ -177,8 +177,8 @@ void loop() {
 
   float power = voltage * current;
 
-  // ---- ENERGY (Assuming 10 second loop) ----
-  totalEnergy += (power * (10.0 / 3600.0));
+  // ---- ENERGY (Assuming 2 minute loop) ----
+  totalEnergy += (power * (120.0 / 3600.0));
 
   // ---- SERIAL FORMAT (MATCH YOUR OUTPUT) ----
   Serial.print("V: ");
@@ -220,5 +220,5 @@ void loop() {
 
   Serial.println("------------------------");
 
-  delay(10000); // 10 seconds delay between readings matches the energy math
+  delay(120000); // 2 mins delay between readings matches the energy math
 }

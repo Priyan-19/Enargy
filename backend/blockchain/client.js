@@ -45,10 +45,11 @@ const contract = new ethers.Contract(
 async function storeReadingOnChain(data) {
   try {
     // Scale floats → integers (Solidity has no float type)
-    const voltageScaled  = Math.round(data.voltage   * 1000);
-    const currentScaled  = Math.round(data.current   * 1000);
-    const powerScaled    = Math.round(data.power     * 1000);
-    const energyScaled   = Math.round(data.energy_kwh * 1000);
+    // Use Math.abs to ensure positive values (Solidity uint256 cannot be negative)
+    const voltageScaled  = Math.abs(Math.round(data.voltage    * 1000));
+    const currentScaled  = Math.abs(Math.round(data.current    * 1000));
+    const powerScaled    = Math.abs(Math.round(data.power      * 1000));
+    const energyScaled   = Math.abs(Math.round(data.energy_kwh * 1000));
 
     console.log('📡 Sending reading to blockchain...');
 
