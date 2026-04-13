@@ -13,6 +13,8 @@ const pool = new Pool({
   database: process.env.DB_NAME     || 'enargy',
   user:     process.env.DB_USER     || 'postgres',
   password: process.env.DB_PASSWORD || 'yourpassword',
+  // Render requires SSL for external/production connections
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Test the connection on startup

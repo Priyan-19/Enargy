@@ -9,10 +9,10 @@ module.exports = {
     localhost: {
       url: "http://127.0.0.1:8545",
     },
-    // Sepolia testnet (optional – uncomment and fill in your keys)
-    // sepolia: {
-    //   url: `https://sepolia.infura.io/v3/YOUR_INFURA_KEY`,
-    //   accounts: [`0x${process.env.PRIVATE_KEY}`],
-    // },
+    // Sepolia testnet
+    sepolia: {
+      url: "https://eth-sepolia.g.alchemy.com/v2/12YLHOQTngcYaYvZ_pp3r",
+      accounts: ["0xf3544773d54ae06396ce379803e15f025a5fdcca56807d5b780614b177e5ab62"],
+    },
   },
 };
