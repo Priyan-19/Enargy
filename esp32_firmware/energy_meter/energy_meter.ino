@@ -12,7 +12,7 @@ const char *ssid = "1";
 const char *password = "11111111";
 
 // ---------------- SERVER ----------------
-const char *serverName = "http://172.16.205.82:3000/api/energy";
+const char *serverName = "https://enargy-backend.onrender.com/api/energy";
 
 // ---------------- AUTH ----------------
 const char *apiKey = "EB_SECURE_KEY_123";
@@ -228,5 +228,5 @@ void loop() {
 
   Serial.println("------------------------");
 
-  delay(60000); // 1 mins delay between readings matches the energy math
+  delay(10000); // 1 mins delay between readings matches the energy math
 }
