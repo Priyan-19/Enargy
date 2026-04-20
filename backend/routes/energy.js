@@ -14,6 +14,7 @@ const pool          = require('../db/pool');
 const apiKeyAuth    = require('../middleware/auth');
 const validateReading = require('../middleware/validateReading');
 const { storeReadingOnChain, getAllReadingsFromChain } = require('../blockchain/client');
+const { calculateBill } = require('../utils/tariff');
 
 // ============================================================
 // POST /api/energy
@@ -167,53 +168,14 @@ router.get('/bill/:meterId', async (req, res) => {
 
     const totalKwh = parseFloat(result.rows[0].total_kwh) || 0;
 
-    // ── Slab Billing Calculation ────────────────────────────
-    let bill = 0;
-    let breakdown = [];
-
-    if (totalKwh <= 100) {
-      bill = totalKwh * 1.5;
-      breakdown = [{ slab: '0–100 kWh', units: totalKwh, rate: 1.5, cost: bill }];
-    } else if (totalKwh <= 300) {
-      const slab1Cost = 100 * 1.5;
-      const slab2Units = totalKwh - 100;
-      const slab2Cost  = slab2Units * 3.0;
-      bill = slab1Cost + slab2Cost;
-      breakdown = [
-        { slab: '0–100 kWh',   units: 100,        rate: 1.5, cost: slab1Cost },
-        { slab: '101–300 kWh', units: slab2Units,  rate: 3.0, cost: slab2Cost },
-      ];
-    } else if (totalKwh <= 500) {
-      const slab1Cost  = 100 * 1.5;
-      const slab2Cost  = 200 * 3.0;
-      const slab3Units = totalKwh - 300;
-      const slab3Cost  = slab3Units * 5.0;
-      bill = slab1Cost + slab2Cost + slab3Cost;
-      breakdown = [
-        { slab: '0–100 kWh',   units: 100,        rate: 1.5, cost: slab1Cost },
-        { slab: '101–300 kWh', units: 200,         rate: 3.0, cost: slab2Cost },
-        { slab: '301–500 kWh', units: slab3Units,  rate: 5.0, cost: slab3Cost },
-      ];
-    } else {
-      const slab1Cost  = 100 * 1.5;
-      const slab2Cost  = 200 * 3.0;
-      const slab3Cost  = 200 * 5.0;
-      const slab4Units = totalKwh - 500;
-      const slab4Cost  = slab4Units * 7.0;
-      bill = slab1Cost + slab2Cost + slab3Cost + slab4Cost;
-      breakdown = [
-        { slab: '0–100 kWh',   units: 100,        rate: 1.5, cost: slab1Cost },
-        { slab: '101–300 kWh', units: 200,         rate: 3.0, cost: slab2Cost },
-        { slab: '301–500 kWh', units: 200,         rate: 5.0, cost: slab3Cost },
-        { slab: 'Above 500 kWh', units: slab4Units, rate: 7.0, cost: slab4Cost },
-      ];
-    }
+    // ── Slab Billing Calculation (Using Utility) ───────────
+    const { total_bill, breakdown } = calculateBill(totalKwh);
 
     res.json({
       success:    true,
       meter_id:   meterId,
       total_kwh:  parseFloat(totalKwh.toFixed(3)),
-      total_bill: parseFloat(bill.toFixed(2)),
+      total_bill,
       currency:   'INR',
       breakdown,
     });

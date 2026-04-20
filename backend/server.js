@@ -14,6 +14,7 @@ const cors    = require('cors');
 // ── Route Modules ──────────────────────────────────────────
 const energyRoutes  = require('./routes/energy');
 const paymentRoutes = require('./routes/payment');
+const billingRoutes = require('./routes/billing');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -60,6 +61,7 @@ app.get('/', (req, res) => {
 // ============================================================
 app.use('/api', energyRoutes);
 app.use('/api', paymentRoutes);
+app.use('/api', billingRoutes);
 
 // ============================================================
 // 404 Handler
@@ -79,12 +81,12 @@ app.use((err, req, res, next) => {
 // ============================================================
 // Start Server
 // ============================================================
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('╔═══════════════════════════════════════╗');
   console.log('║   ⚡ Enargy Backend Server Running ⚡   ║');
   console.log('╠═══════════════════════════════════════╣');
-  console.log(`║   URL: http://localhost:${PORT}           ║`);
+  console.log(`║   URL: http://0.0.0.0:${PORT}             ║`);
   console.log('╚═══════════════════════════════════════╝');
   console.log('');
 });

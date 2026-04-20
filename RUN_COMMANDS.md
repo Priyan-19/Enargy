@@ -38,7 +38,7 @@ Use the following credentials to access the web dashboard:
 
 | Role | Username | Password |
 | :--- | :--- | :--- |
-| **Admin (Electricity Board)** | `EB-Admin` | `TNEB@ADMIN` |
+| **Admin (Electricity Board)** | `EB-Admin` | `TNEB@ADMIN` | 
 | **Consumer (Electricity User)** | `MTR001` | `TNEB@MTR001` |
 
 *(Note: Consumer passwords follow the format `TNEB@{{meter_id}}`)*
