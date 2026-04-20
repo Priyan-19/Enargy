@@ -11,10 +11,10 @@ An end-to-end IoT system for secure, transparent, and automated energy monitorin
 ---
 
 ## 🏗️ Project Architecture
-- **ESP32 Firmware**: Reads sensors, hashes data, and sends readings.
-- **Node.js Backend**: Validates data, stores in PostgreSQL, and anchors to Blockchain.
-- **Hardhat Blockchain**: Immutable Solidity smart contract ledger.
-- **React Dashboard**: Real-time analytics, automated billing, and payments.
+- **ESP32 Firmware**: Reads sensors, hashes data, and sends readings via secure API.
+- **Node.js Backend**: Validates data, stores in PostgreSQL, anchors to Blockchain, and manages billing/payments.
+- **Hardhat Blockchain**: Immutable Solidity smart contract ledger for energy consumption.
+- **React Dashboard**: Real-time analytics, automated billing reports, and consumer payments.
 
 ---
 
