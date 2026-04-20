@@ -22,7 +22,7 @@ const { calculateBill } = require('../utils/tariff');
 // Headers required: x-api-key
 // ============================================================
 router.post('/energy', apiKeyAuth, validateReading, async (req, res) => {
-  const { meter_id, timestamp, voltage, current, power, energy_kwh, hash } = req.body;
+  const { meter_id, timestamp, voltage, current, power, power_factor, energy_kwh, hash } = req.body;
 
   try {
     // If ESP32 fails to grab time, it sends 'N/A', which breaks PostgreSQL's timestamp type
@@ -41,12 +41,12 @@ router.post('/energy', apiKeyAuth, validateReading, async (req, res) => {
     // ── STEP 2: Store Ref & Indexed Data in PostgreSQL ────────
     const insertQuery = `
       INSERT INTO energy_readings
-        (meter_id, timestamp, voltage, current, power, energy_kwh, hash, blockchain_tx_hash)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        (meter_id, timestamp, voltage, current, power, power_factor, energy_kwh, hash, blockchain_tx_hash)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id
     `;
     const dbResult = await pool.query(insertQuery, [
-      meter_id, validTimestamp, voltage, current, power, energy_kwh, hash, txHash
+      meter_id, validTimestamp, voltage, current, power, power_factor, energy_kwh, hash, txHash
     ]);
     const newId = dbResult.rows[0].id;
     console.log(`📥 Reading mapped to PostgreSQL DB with id=${newId}`);

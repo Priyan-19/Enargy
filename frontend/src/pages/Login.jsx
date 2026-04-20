@@ -97,7 +97,6 @@ export default function LoginPage({ onLogin }) {
               <User size={18} style={{ position: 'absolute', left: '12px', top: '15px', color: '#B2BEC3' }} />
               <input 
                 type="text" 
-                placeholder={activeTab === 'consumer' ? 'e.g., MTR001' : 'EB-Admin'} 
                 style={{ paddingLeft: '40px' }}
                 value={formData.username}
                 onChange={(e) => setFormData({...formData, username: e.target.value})}
@@ -111,7 +110,6 @@ export default function LoginPage({ onLogin }) {
               <Lock size={18} style={{ position: 'absolute', left: '12px', top: '15px', color: '#B2BEC3' }} />
               <input 
                 type="password" 
-                placeholder="••••••••" 
                 style={{ paddingLeft: '40px' }}
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}

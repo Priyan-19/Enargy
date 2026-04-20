@@ -1,44 +1,51 @@
-# 🚀 Manual Run Commands & Credentials
+# 🚀 Enargy: Manual Run Commands & Credentials
 
-Use this cheatsheet to quickly start the **Enargy** system for daily development. You will need to open **three separate terminals**.
+Use this guide to quickly spin up the **Enargy** ecosystem for development. You will need to open **three separate terminals**.
 
 ---
 
-## 🏃 Run Commands
+## 🏃 Execution Order
 
 ### Terminal 1: Blockchain Node
-Start the local Ethereum network:
+Start the local Ethereum network using Hardhat.
 ```powershell
 cd blockchain
 npx hardhat node
 ```
-*(Leave this running in the background)*
+*Note: Keep this running. It acts as our local ledger.*
 
 ### Terminal 2: Backend API
-Start the Node.js server to bridge IoT, DB, and Blockchain:
+Start the Node.js server to bridge IoT, Database, and Blockchain.
 ```powershell
 cd backend
 npm run dev
 ```
-*(Runs on http://localhost:3000)*
+*Runs on: http://localhost:3000*
 
 ### Terminal 3: Frontend Dashboard
-Start the React interface:
+Start the React interface for users and admins.
 ```powershell
 cd frontend
 npm run dev
 ```
-*(Runs on http://localhost:5173)*
+*Runs on: http://localhost:5173*
 
 ---
 
-## 🔑 Login Credentials
-
-Use the following credentials to access the web dashboard:
+## 🔑 Access Credentials
 
 | Role | Username | Password |
 | :--- | :--- | :--- |
-| **Admin (Electricity Board)** | `EB-Admin` | `TNEB@ADMIN` | 
-| **Consumer (Electricity User)** | `MTR001` | `TNEB@MTR001` |
+| **Admin (EB)** | `EB-Admin` | `TNEB@ADMIN` | 
+| **Consumer** | `MTR001` | `TNEB@MTR001` |
 
-*(Note: Consumer passwords follow the format `TNEB@{{meter_id}}`)*
+> [!TIP]
+> Consumer passwords follow the format `TNEB@{{meter_id}}`.
+
+---
+
+## 🛠️ Maintenance Commands
+
+- **Compile Smart Contracts**: `cd blockchain; npx hardhat compile`
+- **Deploy Contracts**: `cd blockchain; npx hardhat run scripts/deploy.js --network localhost`
+- **Reinstall All Dependencies**: Run `npm install` in `backend`, `frontend`, and `blockchain` folders.

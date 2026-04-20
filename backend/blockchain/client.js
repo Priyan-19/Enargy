@@ -10,9 +10,9 @@ require('dotenv').config();
 // Only include the functions we actually call from Node.js.
 const CONTRACT_ABI = [
   // Store a reading on-chain
-  "function storeReading(string meterId, uint256 voltage, uint256 current, uint256 power, uint256 energy, string timestamp, string hash) external",
+  "function storeReading(string meterId, uint256 voltage, uint256 current, uint256 power, uint256 powerFactor, uint256 energy, string timestamp, string hash) external",
   // Retrieve all stored readings
-  "function getReadings() external view returns (tuple(string meterId, uint256 voltage, uint256 current, uint256 power, uint256 energy, string timestamp, string hash)[])",
+  "function getReadings() external view returns (tuple(string meterId, uint256 voltage, uint256 current, uint256 power, uint256 powerFactor, uint256 energy, string timestamp, string hash)[])",
   // Get total number of readings stored
   "function getReadingCount() external view returns (uint256)"
 ];
@@ -45,15 +45,14 @@ const contract = new ethers.Contract(
 async function storeReadingOnChain(data) {
   try {
     // Scale floats → integers (Solidity has no float type)
-    // Use Math.abs to ensure positive values (Solidity uint256 cannot be negative)
-    const voltageScaled  = Math.abs(Math.round(data.voltage    * 1000));
-    const currentScaled  = Math.abs(Math.round(data.current    * 1000));
-    const powerScaled    = Math.abs(Math.round(data.power      * 1000));
-    const energyScaled   = Math.abs(Math.round(data.energy_kwh * 1000));
+    const voltageScaled      = Math.abs(Math.round(data.voltage       * 1000));
+    const currentScaled      = Math.abs(Math.round(data.current       * 1000));
+    const powerScaled        = Math.abs(Math.round(data.power         * 1000));
+    const powerFactorScaled  = Math.abs(Math.round(data.power_factor  * 1000));
+    const energyScaled       = Math.abs(Math.round(data.energy_kwh    * 1000));
 
     console.log('📡 Sending reading to blockchain...');
 
-    // Fetch latest nonce directly from network to prevent mismatch if hardhat resets
     const nonce = await provider.getTransactionCount(wallet.address, 'latest');
 
     // Call the smart contract function
@@ -62,13 +61,13 @@ async function storeReadingOnChain(data) {
       voltageScaled,
       currentScaled,
       powerScaled,
+      powerFactorScaled,
       energyScaled,
       data.timestamp || new Date().toISOString(),
       data.hash,
       { nonce }
     );
 
-    // Wait for the transaction to be mined (1 confirmation)
     const receipt = await tx.wait(1);
     console.log('✅ Blockchain TX confirmed:', receipt.hash);
 
@@ -85,15 +84,15 @@ async function storeReadingOnChain(data) {
  */
 async function getAllReadingsFromChain() {
   const readings = await contract.getReadings();
-  // Convert BigNumber values back to readable numbers (divide by 1000)
   return readings.map(r => ({
-    meterId:    r.meterId,
-    voltage:    Number(r.voltage)   / 1000,
-    current:    Number(r.current)   / 1000,
-    power:      Number(r.power)     / 1000,
-    energy_kwh: Number(r.energy)    / 1000,
-    timestamp:  r.timestamp,
-    hash:       r.hash,
+    meterId:      r.meterId,
+    voltage:      Number(r.voltage)      / 1000,
+    current:      Number(r.current)      / 1000,
+    power:        Number(r.power)        / 1000,
+    power_factor: Number(r.powerFactor) / 1000,
+    energy_kwh:   Number(r.energy)       / 1000,
+    timestamp:    r.timestamp,
+    hash:         r.hash,
   }));
 }
 

@@ -22,4 +22,9 @@ export const getBilling = (meterId) => api.get(`/bill/${meterId}`);
 export const getBlockchainData = () => api.get('/blockchain');
 export const getAllReadings = () => api.get('/readings?limit=100');
 
+// Payments
+export const createOrder = (data) => api.post('/payment/order', data);
+export const verifyPayment = (data) => api.post('/payment/verify', data);
+export const getPaymentHistory = (meterId) => api.get(`/payment/${meterId}`);
+
 export default api;

@@ -14,14 +14,12 @@ const char *password = "11111111";
 // ---------------- SERVER ----------------
 const char *serverName = "http://10.136.197.82:3000/api/energy";
 
-// Contract Address (for reference): 0x5FbDB2315678afecb367f032d93F642f64180aa3
-
 // ---------------- AUTH ----------------
 const char *apiKey = "EB_SECURE_KEY_123";
 
-// ---------------- TIME ----------------
+// ---------------- TIME (NTP) ----------------
 const char *ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 19800;
+const long gmtOffset_sec = 19800; // India Time (UTC +5:30)
 const int daylightOffset_sec = 0;
 
 // ---------------- LCD ----------------
@@ -57,6 +55,20 @@ void connectWiFi() {
     Serial.println("\nConnected!");
     lcd.clear();
     lcd.print("WiFi OK");
+    
+    // Sync Time after WiFi is connected
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    Serial.print("Syncing Time");
+    struct tm timeinfo;
+    int ntpRetry = 0;
+    while (!getLocalTime(&timeinfo) && ntpRetry < 10) {
+      Serial.print(".");
+      delay(1000);
+      ntpRetry++;
+    }
+    if (ntpRetry < 10) Serial.println("\nTime Synced!");
+    else Serial.println("\nTime Sync Failed (Using Server Time)");
+    
   } else {
     Serial.println("\nFailed!");
     lcd.clear();
@@ -167,68 +179,77 @@ void setup() {
   lcd.backlight();
 
   connectWiFi();
-
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 }
 
 // ---------------- LOOP ----------------
 void loop() {
 
-  float voltage, current;
+  float voltage, current, powerFactor;
 
   if (testMode) {
-    voltage = random(220, 240);
-    current = random(0, 200) / 100.0;
+    voltage = random(2200, 2400) / 10.0;
+    current = random(10, 200) / 100.0;
+    powerFactor = random(92, 99) / 100.0;
   } else {
     voltage = readVoltage();
     current = readCurrent();
+    powerFactor = 0.95; // Default for non-inductive loads in demo
   }
 
-  float power = voltage * current;
+  // Calculate Power (W) and convert to kW for requested display
+  float powerW = voltage * current * powerFactor;
+  float powerKW = powerW / 1000.0;
 
-  // ---- ENERGY (Assuming 2 minute loop) ----
-  totalEnergy += (power * (120.0 / 3600.0));
-
-  // ---- SERIAL FORMAT (MATCH YOUR OUTPUT) ----
-  Serial.print("V: ");
-  Serial.print(voltage);
-  Serial.print(" | I: ");
-  Serial.print(current);
-  Serial.print(" | P: ");
-  Serial.println(power);
-
-  // ---- LCD ----
-  displayData(voltage, current, power);
+  // ---- ENERGY (Cumulative kWh) ----
+  totalEnergy += (powerKW * (10.0 / 3600.0));
 
   // ---- TIMESTAMP ----
   String timestamp = getTimestamp();
+  String datePart = "N/A";
+  String timePart = "N/A";
+  
+  if (timestamp != "N/A") {
+    datePart = timestamp.substring(0, 10);
+    timePart = timestamp.substring(11, 19);
+  }
+
+  // ---- SERIAL FORMAT ----
+  Serial.print("V: "); Serial.print(voltage, 2);
+  Serial.print(" | I: "); Serial.print(current, 2);
+  Serial.print(" | P: "); Serial.print(powerW, 2);
+  Serial.print(" | PF: "); Serial.print(powerFactor, 2);
+  Serial.print(" | kWh: "); Serial.print(totalEnergy, 4);
+  Serial.print(" | Date: "); Serial.print(datePart);
+  Serial.print(" | Time: "); Serial.print(timePart);
+  Serial.print(" | Meter ID: "); Serial.print(meterID);
+  Serial.println(" |");
 
   // ---- HASH ----
-  String raw =
-      meterID + timestamp + String(voltage) + String(current) + String(power);
+  String raw = meterID + timestamp + String(voltage) + String(current) + String(powerW) + String(powerFactor);
   String hash = generateHash(raw);
 
   // ---- JSON ----
-  StaticJsonDocument<300> doc;
-
+  StaticJsonDocument<512> doc;
   doc["meter_id"] = meterID;
   doc["timestamp"] = timestamp;
   doc["voltage"] = voltage;
   doc["current"] = current;
-  doc["power"] = power;
+  doc["power"] = powerW; 
+  doc["power_factor"] = powerFactor;
   doc["energy_kwh"] = totalEnergy;
   doc["hash"] = hash;
 
   String jsonString;
   serializeJson(doc, jsonString);
-
-  // ---- PRINT JSON (MATCH YOUR OUTPUT) ----
   Serial.println(jsonString);
+
+  // ---- LCD ----
+  displayData(voltage, current, powerW);
 
   // ---- SEND ----
   sendData(jsonString);
 
   Serial.println("------------------------");
 
-  delay(10000); // 1 mins delay between readings matches the energy math
+  delay(10000); // 10 seconds between readings
 }

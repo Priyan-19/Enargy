@@ -19,7 +19,8 @@ contract EnergyMeter {
         string  meterId;    // Meter ID (e.g., "MTR001")
         uint256 voltage;    // Voltage × 1000 (e.g., 2590 = 2.590 V)
         uint256 current;    // Current × 1000 (e.g., 430  = 0.430 A)
-        uint256 power;      // Power × 1000   (e.g., 1130 = 1.130 W)
+        uint256 power;      // Power × 1000   (e.g., 1130 = 1.130 W or kW depending on scale)
+        uint256 powerFactor; // PF × 1000     (e.g., 950 = 0.950)
         uint256 energy;     // Energy × 1000  (kWh × 1000)
         string  timestamp;  // ISO timestamp string from ESP32
         string  hash;       // Integrity hash from ESP32
@@ -61,21 +62,23 @@ contract EnergyMeter {
         uint256 voltage,
         uint256 current,
         uint256 power,
+        uint256 powerFactor,
         uint256 energy,
         string memory timestamp,
         string memory hash
     ) external {
         // Create a new Reading struct and push it to the array
         readings.push(Reading({
-            meterId:   meterId,
-            voltage:   voltage,
-            current:   current,
-            power:     power,
-            energy:    energy,
-            timestamp: timestamp,
-            hash:      hash,
-            sender:    msg.sender,          // backend wallet address
-            blockTime: block.timestamp      // Unix timestamp of the block
+            meterId:     meterId,
+            voltage:     voltage,
+            current:     current,
+            power:       power,
+            powerFactor: powerFactor,
+            energy:      energy,
+            timestamp:   timestamp,
+            hash:        hash,
+            sender:      msg.sender,          // backend wallet address
+            blockTime:   block.timestamp      // Unix timestamp of the block
         }));
 
         readingCount++;
