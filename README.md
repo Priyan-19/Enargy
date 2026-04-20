@@ -1,4 +1,4 @@
-# ⚡ Enargy: Blockchain-Integrated Smart Energy Grid
+# ⚡ Enargy: Blockchain-Based Smart Energy Meter
 
 **Enargy** is a next-generation smart energy management ecosystem that combines IoT hardware, decentralized ledgers, and modern web interfaces to provide a transparent, secure, and automated electricity billing solution.
 
