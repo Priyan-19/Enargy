@@ -12,7 +12,9 @@ const char *ssid = "1";
 const char *password = "11111111";
 
 // ---------------- SERVER ----------------
-const char *serverName = "http://172.16.205.82:3000/api/energy";
+const char *serverName = "http://10.136.197.82:3000/api/energy";
+
+// Contract Address (for reference): 0x5FbDB2315678afecb367f032d93F642f64180aa3
 
 // ---------------- AUTH ----------------
 const char *apiKey = "EB_SECURE_KEY_123";
@@ -228,5 +230,5 @@ void loop() {
 
   Serial.println("------------------------");
 
-  delay(60000); // 1 mins delay between readings matches the energy math
+  delay(10000); // 1 mins delay between readings matches the energy math
 }

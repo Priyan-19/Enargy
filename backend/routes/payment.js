@@ -109,4 +109,19 @@ router.get('/payment/:meterId', async (req, res) => {
   }
 });
 
+// ============================================================
+// GET /api/payments
+// Returns all payment records (for admin)
+// ============================================================
+router.get('/payments', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM payments ORDER BY created_at DESC`
+    );
+    res.json({ success: true, payments: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error.', detail: err.message });
+  }
+});
+
 module.exports = router;
