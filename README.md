@@ -1,41 +1,116 @@
-# ⚡ Enargy: Blockchain-Based Smart Energy Meter
+<div align="center">
 
-**Enargy** is a next-generation smart energy management ecosystem that combines IoT hardware, decentralized ledgers, and modern web interfaces to provide a transparent, secure, and automated electricity billing solution.
+# ⚡ ENARGY
+### Blockchain-Powered Smart Energy Metering Platform 🌐🔋
 
-The project addresses the core challenges of traditional energy grids: data tampering, billing disputes, and lack of real-time transparency.
+
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Solidity](https://img.shields.io/badge/Solidity-363636?style=for-the-badge&logo=solidity&logoColor=white)](https://soliditylang.org/)
+[![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white)](https://ethereum.org/)
+
+**ENARGY** is a next-generation smart energy ecosystem that integrates IoT, Blockchain, and modern web technologies to eliminate inefficiencies and ensure transparency in electricity billing systems.
+
+</div>
+
+---
+
+## 📖 Project Overview
+
+ENARGY transforms traditional energy metering into a **secure, tamper-proof, and intelligent system** by leveraging decentralized infrastructure.
+
+### Core Value Proposition
+- **🛡️ Immutable Trust Layer**: Blockchain-secured energy readings
+- **📡 Real-Time Monitoring**: Live consumption analytics
+- **🧾 Automated Billing**: Smart contract-driven logic
+- **💳 Seamless Payments**: Integrated billing and payment flow
+- **🌐 End-to-End Ecosystem**: Hardware → Backend → Blockchain → UI
 
 ---
 
 ## 🏗️ System Architecture
 
-Enargy operates through four interconnected layers:
+```mermaid
+graph TD
+    subgraph Hardware Layer
+        ESP32[ESP32 Microcontroller]
+        SENS[Voltage & Current Sensors]
+        LCD[I2C LCD Display]
+    end
 
-1.  **IoT Layer (ESP32 Firmware)**: Captures real-time energy data from physical lines and transmits it with cryptographic integrity hashes.
-2.  **Orchestration Layer (Node.js Backend)**: Receives IoT data, verifies its integrity, manages the relational database, and bridges to the blockchain.
-3.  **Trust Layer (Ethereum Blockchain)**: Stores immutable energy consumption records and executes billing logic via Solidity smart contracts.
-4.  **Presentation Layer (React Frontend)**: Provides an interactive dashboard for consumers to monitor usage and for the Electricity Board (EB) to manage the grid.
+    subgraph Communication
+        WiFi[WiFi / HTTP POST]
+    end
+
+    subgraph Application Layer
+        API[Node.js / Express Backend]
+        DB[(PostgreSQL)]
+        Pay[Razorpay API]
+    end
+
+    subgraph Trust Layer
+        BC[Ethereum / Hardhat Blockchain]
+        SC[Smart Contract: EnergyMeter.sol]
+    end
+
+    subgraph Presentation Layer
+        React[React / Vite Dashboard]
+        Charts[Chart.js Visualization]
+    end
+
+    SENS --> ESP32
+    ESP32 --> LCD
+    ESP32 -- "JSON + Hash" --> WiFi
+    WiFi --> API
+    API --> DB
+    API -- "Ethers.js" --> SC
+    SC --> BC
+    API -- "Payments" --> Pay
+    React -- "REST API" --> API
+    React -- "Web3" --> BC
+```
 
 ---
 
-## ✨ Key Features
+## 🚀 Key Features
 
--   **Tamper-Proof Data**: Every reading is hashed using SHA256 at the source (ESP32) and verified by the backend.
--   **Immutable Records**: Historical consumption is stored on a decentralized ledger, making it impossible to alter past bills.
--   **Real-time Monitoring**: Live visualization of voltage, current, power, and total consumption.
--   **Automated Billing**: Smart contracts calculate monthly bills based on predefined tariffs.
--   **Integrated Payments**: Native Razorpay integration for seamless bill settlement.
--   **Hardware Simulation**: Full-stack testing is possible without physical hardware using the built-in "Simulated Mode" in the firmware.
+### 🛡️ Secure Energy Tracking
+- **Tamper-Proof Readings**: Sensor data hashed on-device and recorded on blockchain
+- **Decentralized Trust**: Immutable ledger prevents manipulation
+
+### 📊 Real-Time Monitoring
+- Live tracking of:
+  - Voltage (V)
+  - Current (A)
+  - Power (W)
+  - Energy Consumption (kWh)
+
+### 🧾 Smart Billing Engine
+- Blockchain-backed reading validation
+- Automated bill generation foundation
+
+### 💳 Payment Integration
+- Razorpay-powered secure payments
+- Seamless billing-to-payment pipeline
+
+### 👤 Multi-Role System
+- **Admin (Electricity Board)**
+- **Consumer Dashboard**
+
+### 📡 IoT Integration
+- ESP32-based data acquisition
+- Simulation fallback for testing environments
 
 ---
 
 ## 🛠️ Technology Stack
 
 | Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | React 18, Vite, Chart.js, Tailwind CSS, Lucide Icons |
-| **Backend** | Node.js, Express.js, Ethers.js, PostgreSQL |
-| **Blockchain** | Solidity, Hardhat, OpenZeppelin |
-| **IoT/Hardware** | C++, ESP32, PZEM-004T Sensor |
+|------|-------------|
+| **Frontend** | React, Vite, Tailwind CSS, Chart.js, Lucide |
+| **Backend** | Node.js, Express, PostgreSQL, Ethers.js, Razorpay SDK |
+| **Blockchain** | Solidity, Hardhat, Ethereum |
+| **Hardware** | ESP32, Arduino (C++), ACS712, ZMPT101B, I2C LCD |
 
 ---
 
@@ -43,42 +118,98 @@ Enargy operates through four interconnected layers:
 
 ```text
 Enargy/
-├── backend/            # Node.js API server & Database logic
-├── blockchain/         # Hardhat project with Solidity contracts
-├── esp32_firmware/     # Arduino/C++ code for the energy meter
-├── frontend/           # React dashboard & UI
-└── RUN_COMMANDS.md     # Quick-start execution guide
+├── backend/
+│   ├── blockchain/
+│   │   └── client.js
+│   ├── db/
+│   │   ├── pool.js
+│   │   └── schema.sql
+│   ├── middleware/
+│   │   ├── auth.js
+│   │   └── validateReading.js
+│   ├── routes/
+│   │   ├── billing.js
+│   │   ├── energy.js
+│   │   └── payment.js
+│   ├── scripts/
+│   │   ├── create_db.js
+│   │   └── test_esp32.js
+│   ├── utils/
+│   │   └── tariff.js
+│   ├── .env.example
+│   ├── package.json
+│   └── server.js
+│
+├── blockchain/
+│   ├── contracts/
+│   │   └── EnergyMeter.sol
+│   ├── scripts/
+│   │   └── deploy.js
+│   ├── hardhat.config.js
+│   └── package.json
+│
+├── esp32_firmware/
+│   └── energy_meter/
+│       └── energy_meter.ino
+│
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Admin/
+│   │   │   └── Consumer/
+│   │   ├── services/
+│   │   │   └── api.js
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── index.html
+│   └── package.json
+│
+├── README.md
+└── RUN_COMMANDS.md
 ```
 
 ---
 
 ## 🚀 Getting Started
 
-To set up the full ecosystem, you will need to open **three separate terminals**.
-
 ### Prerequisites
+- Node.js (v18+)
+- PostgreSQL
+- Hardhat
+- Arduino IDE (for ESP32)
 
--   [Node.js](https://nodejs.org/) (v18+)
--   [PostgreSQL](https://www.postgresql.org/) (Running locally or via cloud)
--   [Arduino IDE](https://www.arduino.cc/en/software) (for ESP32 deployment)
+---
 
-### 1. Blockchain Setup
-```powershell
-cd blockchain
-npm install
-npx hardhat node  # Starts local Ethereum node
+### 1. Clone Repository
+```bash
+git clone https://github.com/your-repo/enargy.git
+cd enargy
 ```
 
-### 2. Backend Setup
-```powershell
+---
+
+### 2. Setup Blockchain
+```bash
+cd blockchain
+npm install
+npx hardhat node
+```
+
+---
+
+### 3. Setup Backend
+```bash
 cd backend
 npm install
-# Configure .env with your DB and Blockchain credentials
+
+# Configure .env
 npm run dev
 ```
 
-### 3. Frontend Setup
-```powershell
+---
+
+### 4. Setup Frontend
+```bash
 cd frontend
 npm install
 npm run dev
@@ -86,32 +217,52 @@ npm run dev
 
 ---
 
-## 🔑 Access Credentials
+## 🔑 Default Credentials
 
 | Role | Username | Password |
-| :--- | :--- | :--- |
-| **Admin (EB)** | `EB-Admin` | `TNEB@ADMIN` | 
-| **Consumer** | `MTR001` | `TNEB@MTR001` |
+|------|----------|----------|
+| Admin (EB) | EB-Admin | TNEB@ADMIN |
+| Consumer | MTR001 | TNEB@MTR001 |
 
 ---
 
-## 🔒 Security Implementation
+## 🔧 Hardware Configuration
 
-### Data Integrity
-The ESP32 calculates a SHA256 hash of the JSON payload containing:
--   `meter_id`
--   `voltage`, `current`, `power`, `energy`
--   `timestamp`
+Supported Components:
 
-The backend recalculates this hash. If they don't match, the reading is rejected as "tampered."
+- ESP32 DevKit V1
+- I2C LCD 16x2 (Address: `0x27`)
+- Current Sensor → Pin `34`
+- Voltage Sensor → Pin `35`
 
-### Blockchain Trust
-Once verified, the backend sends the reading to the `EnergyMeter` smart contract. The contract stores:
--   The total consumption for the period.
--   The root hash of the data for future audits.
+⚠️ Ensure:
+- `serverName` and `ssid` in `energy_meter.ino` match your network
 
 ---
 
-## 📄 License
+## 🔒 Security & Reliability
 
-This project is developed for educational and research purposes in the field of Smart Grids and Blockchain technology.
+- On-device hashing prevents tampering
+- Blockchain ensures immutability
+- Backend validation for IoT payloads
+- Secure payment processing via Razorpay
+
+---
+
+## 📦 Core Capabilities Summary
+
+- IoT-based energy data acquisition
+- Blockchain-secured storage
+- Real-time analytics dashboard
+- Smart billing logic
+- Integrated payments
+- Multi-role system
+
+---
+
+
+<div align="center">
+  <p>Built with ⚡ for a Transparent Energy Future</p>
+  <p>Developed by <strong>Priyan-19</strong></p>
+  <p>© 2026 ENARGY Platform. All Rights Reserved.</p>
+</div>
