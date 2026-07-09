@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ ENARGY
+# ⚡ Blockchain-Powered Smart Energy Meter
 ### Blockchain-Powered Smart Energy Metering Platform 🌐🔋
 
 
